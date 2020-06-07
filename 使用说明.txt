@@ -1,0 +1,9 @@
+使用的只需要修改CameraScanAnalysis.java 文件onPreviewFrame函数和 mAnalysisTask 函数
+
+I/System.out: *********相机1
+I/System.out: *********相机3
+I/System.out: *********扫码结果resint0
+    *********扫码结果resultStrnull
+
+
+在回调函数中拍照片 QRActivity类的回调函数中拍照片 
