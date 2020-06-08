@@ -18,8 +18,10 @@
 3. 在QRActivity类 ScanCallback回调函数中调用takePicture函数， takePicture拍照后，调用AddTimeWatermark添加扫描结果以及扫描时间信息，保存到本地文件中。
 
 ## 效果：
+这个拍的是药盒， 快递单一样的。
 
 ## ![image-20200608080449651](xiaoguo.jpg)
+
 
 ### 未来想法：
 
