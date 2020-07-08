@@ -61,7 +61,7 @@
    2. 在安卓 配置好服务器信息
    </p>
    <p align="center">
-  <img src="picture/android_config.jpg" height="300"  />
+  <img src="picture/android_config.jpg" height="500"  />
 </p>
    
    3. 服务端拍照
