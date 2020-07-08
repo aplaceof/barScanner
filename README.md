@@ -20,7 +20,9 @@
 ## 效果：
 这个拍的是药盒， 拍快递单一样的。
 
-## ![image-20200608080449651](xiaoguo.jpg)
+<p align="center">
+  <img src="picture/xiaoguo.jpg" height="800"  />
+</p>
 
 
 ### 新增功能：
@@ -34,12 +36,36 @@
 ## 服务器用法
 服务器的code 和 jar包位于 server 目录下。 包括接收手机拍照文件的tomcat服务器 拍人脸的 人脸服务器。
 工作流程：
-1.	安卓手机配置好服务器相关信息后，  将拍下来的照片发送给 tomcat 服务器，  tomcat 服务器将拍下来的照片进行存储。 
-2.	同时tomcat 服务器向 服务器本机 的拍照服务器发送请求， 拍照服务器连接摄像机， 拍下人脸的照片。
-如图所示：
-1. 在安卓 配置好服务器信息 
+   1.  使用config.jar 进行配置服务器， 然后开启服务器 
+   2.	根据服务器信息设置安卓app，
+   3.	手机将拍下来的照片发送给 tomcat 服务器（kuaidi.war），  tomcat 服务器将拍下来的照片进行存储。 
+   4. 同时tomcat 服务器向 服务器本机 的拍照服务器(camera.jar)发送请求， 拍照服务器连接摄像机， 拍下人脸照片。
+   
+   
+注： 手机只需连接tomcat 服务器即可 。
 
-2. 服务端拍照
+
+如图所示：
+   1. 配置服务器信息, 并打开服务器。  服务器需要结合server config 目录下的三个配置文件使用， 将这三个文件放在config文件夹下，config文件夹 放在总路径下。同时将tomcat的版本号信息都删去，将kuaidi.war放在其webapp目录下。 如图所示。
+   <p align="center">
+  <img src="picture/server_config.jpg" height="800"  />
+</p>
+   <p align="center">
+  <img src="picture/server.jpg" height="800"  />
+</p>
+   <p align="center">
+  <img src="picture/path.jpg" height="800"  />
+</p>
+
+
+   2. 在安卓 配置好服务器信息
+   </p>
+   <p align="center">
+  <img src="picture/android_config.jpg" height="800"  />
+</p>
+   
+   3. 服务端拍照
+   
 
 
 
