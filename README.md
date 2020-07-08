@@ -54,10 +54,13 @@
 </p>
 
    #### 开启服务器（快递服务器和照相服务器 ）
+   #### 快递服务器
    
 <p align="center">
-  <img src="picture/file_server.jpg" height="300"  />
+  <img src="picture/file_server.jpg" height="100"  />
 </p>
+
+  #### 照相服务器
 
 <p align="center">
   <img src="picture/camera_server.jpg" height="300"  />
