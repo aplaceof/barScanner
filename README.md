@@ -20,7 +20,9 @@
 ## 效果：
 这个拍的是药盒， 拍快递单一样的。
 
-## ![image-20200608080449651](picture/xiaoguo.jpg)
+<p align="center">
+  <img src="picture/xiaoguo.jpg" height="800"  />
+</p>
 
 
 ### 新增功能：
@@ -45,12 +47,22 @@
 
 如图所示：
    1. 配置服务器信息, 并打开服务器。  服务器需要结合server config 目录下的三个配置文件使用， 将这三个文件放在config文件夹下，config文件夹 放在总路径下。同时将tomcat的版本号信息都删去，将kuaidi.war放在其webapp目录下。 如图所示。
-   ## ![image-20200608080449651](picture/server_config.jpg)
-   ## ![image-20200608080449651](picture/serer.jpg)
-   ## ![image-20200608080449651](picture/path.jpg)
+   <p align="center">
+  <img src="picture/server_config.jpg" height="800"  />
+</p>
+   <p align="center">
+  <img src="picture/server.jpg" height="800"  />
+</p>
+   <p align="center">
+  <img src="picture/path.jpg" height="800"  />
+</p>
 
-   2. 在安卓 配置好服务器信息   
-   ## ![image-20200608080449651](picture/android_config.jpg)
+
+   2. 在安卓 配置好服务器信息
+   </p>
+   <p align="center">
+  <img src="picture/android_config.jpg" height="800"  />
+</p>
    
    3. 服务端拍照
    
