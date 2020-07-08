@@ -18,11 +18,21 @@
 3. 在QRActivity类 ScanCallback回调函数中调用takePicture函数， takePicture拍照后，调用AddTimeWatermark添加扫描结果以及扫描时间信息，保存到本地文件中。
 
 ## 效果：
-这个拍的是药盒， 拍快递单一样的。
+这个拍的是药盒， 拍快递单一样的。 人脸图像用的是小象的，没人想上镜啊， 就让吉祥物来吧。
 
-<p align="center">
-  <img src="picture/xiaoguo.jpg" height="300"  />
+   &ensp;&ensp;&ensp;&ensp; **快递相片** 
+   
+ <p align="center">
+  <img src="picture/快递_81711980130872461330.jpg" height="300"  />
 </p>
+
+   &ensp;&ensp;&ensp;&ensp; **人脸相片** 
+      
+<p align="center">
+  <img src="picture/人像_81711980130872461330.jpg" height="300"  />
+</p>
+   
+
 
 
 ### 新增功能：
