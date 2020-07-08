@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="webcam-capture-0.3.12.jar"/>
+	<classpathentry kind="lib" path="bridj-0.7.0.jar"/>
+	<classpathentry kind="lib" path="slf4j-api-1.8.0-beta2.jar"/>
+	<classpathentry kind="lib" path="slf4j-simple-1.8.0-beta2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

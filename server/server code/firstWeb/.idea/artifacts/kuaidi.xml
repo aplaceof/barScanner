@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="kuaidi">
+    <output-path>$PROJECT_DIR$/out/artifacts/kuaidi</output-path>
+    <root id="archive" name="kuaidi.war">
+      <element id="dir-copy" path="$PROJECT_DIR$/web" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="BarCodeWebServer" />
+        </element>
+        <element id="directory" name="lib" />
+      </element>
+    </root>
+  </artifact>
+</component>
