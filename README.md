@@ -21,7 +21,7 @@
 这个拍的是药盒， 拍快递单一样的。
 
 <p align="center">
-  <img src="picture/xiaoguo.jpg" height="800"  />
+  <img src="picture/xiaoguo.jpg" height="300"  />
 </p>
 
 
@@ -48,20 +48,20 @@
 如图所示：
    1. 配置服务器信息, 并打开服务器。  服务器需要结合server config 目录下的三个配置文件使用， 将这三个文件放在config文件夹下，config文件夹 放在总路径下。同时将tomcat的版本号信息都删去，将kuaidi.war放在其webapp目录下。 如图所示。
    <p align="center">
-  <img src="picture/server_config.jpg" height="800"  />
+  <img src="picture/server config.jpg" height="300"  />
 </p>
    <p align="center">
-  <img src="picture/server.jpg" height="800"  />
+  <img src="picture/server.jpg" height="300"  />
 </p>
    <p align="center">
-  <img src="picture/path.jpg" height="800"  />
+  <img src="picture/path.jpg" height="300"  />
 </p>
 
 
    2. 在安卓 配置好服务器信息
    </p>
    <p align="center">
-  <img src="picture/android_config.jpg" height="800"  />
+  <img src="picture/android_config.jpg" height="300"  />
 </p>
    
    3. 服务端拍照
