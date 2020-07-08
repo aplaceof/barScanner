@@ -360,7 +360,7 @@ class CameraScanAnalysis extends Activity  implements Camera.PreviewCallback {
 
             String resultStr = null;
             int resultType = -1;
-            System.out.println("*********扫码结果resint" + result  );
+//            System.out.println("*********扫码结果resint" + result  );
 
             if (result != 0) {
                 SymbolSet symSet = mImageScanner.getResults();
@@ -370,8 +370,8 @@ class CameraScanAnalysis extends Activity  implements Camera.PreviewCallback {
                 }
 
             }
-            System.out.println("*********扫码结果resultStr" + resultStr  );
-            System.out.println("*********扫码结果resultType" + resultType  );
+//            System.out.println("*********扫码结果resultStr" + resultStr  );
+//            System.out.println("*********扫码结果resultType" + resultType  );
 
             if (!TextUtils.isEmpty(resultStr)) {    //  扫码成功， 理论上来说在这里直接保存图片就行了, 但是这里保存的图片的质量非常低
 //                writePic(  barcode, resultStr );

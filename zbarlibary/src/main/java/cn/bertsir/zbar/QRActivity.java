@@ -23,12 +23,14 @@ import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -44,18 +46,40 @@ import android.widget.Toast;
 import com.soundcloud.android.crop.Crop;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.Socket;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
+
+import cn.bertsir.zbar.utils.UploadUtil;
+
 
 import cn.bertsir.zbar.Qr.ScanResult;
 import cn.bertsir.zbar.Qr.Symbol;
 import cn.bertsir.zbar.utils.GetPathFromUri;
 import cn.bertsir.zbar.utils.QRUtils;
+import cn.bertsir.zbar.utils.UploadUtil;
+//import cn.bertsir.zbar.utils.UploadUtil2;
 import cn.bertsir.zbar.view.ScanView;
+import cn.bertsir.zbar.utils.TcpRequest;
 import cn.bertsir.zbar.view.VerticalSeekBar;
 
 public class QRActivity extends Activity implements View.OnClickListener, SensorEventListener {
@@ -82,7 +106,20 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
     private VerticalSeekBar vsb_zoom;
     private AlertDialog progressDialog;
     private float oldDist = 1f;
+    private String  IPAdress = "";
+    private String  port = "";
+    private int  picQuality;
+    private static   String requestURL = "";
+    private int finishSoundID = 0;
+    private int errorSoundID = 0;
+    private Context mContext;
+    private Set<String> picSet ;
+    private long  pre_scan_time;
+    private long  new_scan_time;
 
+
+    private static    String  picFileName = "" ;
+    private static    String  picFileMarker = "" ;
     //用于检测光线
     private SensorManager sensorManager;
     private Sensor sensor;
@@ -97,10 +134,21 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
         }
         Log.i("zBarLibary", "version: "+BuildConfig.VERSION_NAME);
         options = (QrConfig) getIntent().getExtras().get(QrConfig.EXTRA_THIS_CONFIG);
+        mContext = this;
         initParm();
         setContentView(R.layout.activity_qr);
         initView();
     }
+//    @Override
+//    protected void onDestroy() {
+//
+//    }
+
+
+    /**
+     * 获得用户设置
+     */
+
 
     /**
      * 初始化参数
@@ -129,9 +177,22 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
         Symbol.looperWaitTime = options.getLoop_wait_time();
         Symbol.screenWidth = QRUtils.getInstance().getScreenWidth(this);
         Symbol.screenHeight = QRUtils.getInstance().getScreenHeight(this);
+        // 服务器相关设置
+        Symbol.upload = options.isUpload();
+        IPAdress = options.getIPAdress();
+        picQuality = options.getPicQuality();
+        port = options.getPort();
+
+//        requestURL = "http://192.168.0.100:8080/firstWeb_war_exploded/demo";
+
+        requestURL =  "http://" + IPAdress +":" +port + "/" +options.getServerPath();
+        System.out.println("得到的 url 是" + requestURL );
         if (options.isAuto_light()) {
             getSensorManager();
         }
+        picSet = new HashSet<String>();
+        new_scan_time = 0;
+        pre_scan_time = 0;
     }
 
     /**
@@ -141,10 +202,14 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
         cp = (CameraPreview) findViewById(R.id.cp);
         //bi~
         soundPool = new SoundPool(10, AudioManager.STREAM_SYSTEM, 5);
-        soundPool.load(this, options.getDing_path(), 1);
+        finishSoundID = soundPool.load(this, options.getDing_path(), 1);
+        errorSoundID = soundPool.load(this,  R.raw.error, 1);
+//        soundPool.load(this, options.getDing_path(), 1);
 
         sv = (ScanView) findViewById(R.id.sv);
         sv.setType(options.getScan_view_type());
+//        System.out.println(  "用的时候， 扫码类型是" +  options.getScan_view_type( ) );
+//        sv.setType( 2 );
 
         mo_scanner_back = (ImageView) findViewById(R.id.mo_scanner_back);
         mo_scanner_back.setOnClickListener(this);
@@ -226,20 +291,22 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
      * 识别结果回调
      */
 
+
+
+
     private static Bitmap AddTimeWatermark(Bitmap mBitmap, String result) {
         //获取原始图片与水印图片的宽与高
         int mBitmapWidth = mBitmap.getWidth();
         int mBitmapHeight = mBitmap.getHeight();
 
         Bitmap mNewBitmap = Bitmap.createBitmap(mBitmapWidth, mBitmapHeight, Bitmap.Config.ARGB_8888);
-
         Canvas mCanvas = new Canvas(mNewBitmap);
         //向位图中开始画入MBitmap原始图片
         mCanvas.drawBitmap(mBitmap,0,0,null);
         //添加文字
         Paint mPaint = new Paint();
-        String  timeStr  = "拍摄时间:  "  +
-                new SimpleDateFormat("yyyy-MM-dd hh:mm:ss EEEE").format(new Date());
+        String date_str = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss EEEE").format(new Date());
+        String  timeStr  = "拍摄时间:  "  +  date_str;
         String  barcodeStr   = "条形码: "  +  result ;
         //String mFormat = TingUtils.getTime()+"\n"+" 纬度:"+GpsService.latitude+"  经度:"+GpsService.longitude;
         mPaint.setColor(Color.RED);
@@ -250,127 +317,452 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
         mCanvas.drawText(barcodeStr,   400,800 ,mPaint);
         mCanvas.save(Canvas.ALL_SAVE_FLAG);
         mCanvas.restore();
-
         return mNewBitmap;
+    }
+
+    private String uploadPic2(String filePath, String uploadUrl ) {
+        System.out.println("进入异步线程");
+
+        String end = "\r\n";
+        String twoHyphens = "--";
+        String boundary = "******";
+        try {
+            URL url = new URL(uploadUrl);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.setChunkedStreamingMode(51200);
+            httpURLConnection.setDoInput(true);
+            httpURLConnection.setDoOutput(true);
+            httpURLConnection.setUseCaches(false);
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setConnectTimeout(6*1000);
+            httpURLConnection.setRequestProperty("Connection", "Keep-Alive");
+            httpURLConnection.setRequestProperty("Charset", "UTF-8");
+            httpURLConnection.setRequestProperty("Content-Type",
+                    "multipart/form-data;boundary=" + boundary);
+
+            DataOutputStream dos = new DataOutputStream(httpURLConnection
+                    .getOutputStream());
+            dos.writeBytes(twoHyphens + boundary + end);
+            dos.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\""
+                    + filePath.substring(filePath.lastIndexOf("/") + 1)
+                    + "\"" + end);
+            dos.writeBytes(end);
+
+            FileInputStream fis = new FileInputStream(filePath);
+            long total = fis.available();
+            String totalstr = String.valueOf(total);
+            Log.d("文件大小", totalstr);
+            byte[] buffer = new byte[1024*10]; // 8k
+            int count = 0;
+            int length = 0;
+            while ((count = fis.read(buffer)) != -1) {
+                dos.write(buffer, 0, count);
+                length += count;
+//                    publishProgress((int) ((length / (float) total) * 100));
+                //为了演示进度,休眠500毫秒
+                //Thread.sleep(500);
+            }
+
+            dos.writeBytes(end);
+            dos.writeBytes(twoHyphens + boundary + twoHyphens + end);
+            fis.close();
+            dos.flush();
+
+            InputStream is = httpURLConnection.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is, "utf-8");
+            BufferedReader br = new BufferedReader(isr);
+            @SuppressWarnings("unused")
+            String result = br.readLine();
+            dos.close();
+            is.close();
+            System.out.println("上传成功");
+            return "上传成功";
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            return "上传失败";
+        }
+
+    }
+    private String uploadPic(String filePath, String uploadUrl ) {
+        System.out.println("进入异步线程");
+
+        String end = "\r\n";
+        String twoHyphens = "--";
+        String boundary = "******";
+        try {
+            URL url = new URL(uploadUrl);
+            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.setChunkedStreamingMode(51200);
+            httpURLConnection.setDoInput(true);
+            httpURLConnection.setDoOutput(true);
+            httpURLConnection.setUseCaches(false);
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setConnectTimeout(6*1000);
+            httpURLConnection.setRequestProperty("Connection", "Keep-Alive");
+            httpURLConnection.setRequestProperty("Charset", "UTF-8");
+            httpURLConnection.setRequestProperty("Content-Type",
+                    "multipart/form-data;boundary=" + boundary);
+
+
+            DataOutputStream dos = new DataOutputStream(httpURLConnection
+                    .getOutputStream());
+            dos.writeBytes(twoHyphens + boundary + end);
+            dos.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\""
+                    + filePath.substring(filePath.lastIndexOf("/") + 1)
+                    + "\"" + end);
+            dos.writeBytes(end);
+
+            FileInputStream fis = new FileInputStream(filePath);
+            long total = fis.available();
+            String totalstr = String.valueOf(total);
+            Log.d("文件大小", totalstr);
+            byte[] buffer = new byte[1024*10]; // 8k
+            int count = 0;
+            int length = 0;
+            while ((count = fis.read(buffer)) != -1) {
+                dos.write(buffer, 0, count);
+                length += count;
+//                    publishProgress((int) ((length / (float) total) * 100));
+                //为了演示进度,休眠500毫秒
+                //Thread.sleep(500);
+            }
+
+            dos.writeBytes(end);
+            dos.writeBytes(twoHyphens + boundary + twoHyphens + end);
+            fis.close();
+            dos.flush();
+
+            InputStream is = httpURLConnection.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is, "utf-8");
+            BufferedReader br = new BufferedReader(isr);
+            @SuppressWarnings("unused")
+            String result = br.readLine();
+            dos.close();
+            is.close();
+            System.out.println("上传成功");
+            return "上传成功";
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            return "上传失败";
+        }
+
+    }
+
+    private static String bitmapToBase64(Bitmap bitmap, int picQuality) {  // 压缩会显著减少要传输的数据
+        String result = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            if (bitmap != null) {
+
+                Matrix matrix = new Matrix();
+                matrix.setScale(0.5f, 0.5f);
+                Bitmap bm = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                bitmap = bm;
+
+                baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, picQuality, baos);
+                byte[] bitmapBytes = baos.toByteArray();
+//                System.out.println("压缩长度是" + bitmapBytes. length );
+
+
+                baos.flush();
+                baos.close();
+
+
+                result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (baos != null) {
+                    baos.flush();
+                    baos.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 
 
 
-    public void takePicture(final ImageView view,  Camera camera, final String result){
+
+    private class MyTask extends  AsyncTask<byte[], Integer , String >{
+        @Override
+        protected void onPreExecute(  ) {
+
+//            mTvProgress.setText("loading...");
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+//            mPgBar.setProgress(values[0]);
+//            mTvProgress.setText("loading..." + values[0] + "%");
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if (result ==  "上传失败" ){
+                soundPool.play(errorSoundID, 1, 1, 0, 0, 1);
+            }
+        }
+        @Override
+        protected String doInBackground(byte[] ... params) {
+//            System.out.println("进入异步线程");
+//            System.out.println("请求的URL地址是： " + requestURL );
+            int compressPicQuality = picQuality;
+            byte data [] = params[0];
+            String uploadUrl = requestURL;
+            String fileName = picFileName;
+            String picMarker = picFileMarker;
+
+
+            Bitmap mBitmap = BitmapFactory.decodeByteArray(data, 0, data.length );
+            final Bitmap mTimeWatermark = AddTimeWatermark(mBitmap,  picMarker);    //时间水印
+
+            String picData = bitmapToBase64(mTimeWatermark, compressPicQuality);
+            String end = "\r\n";
+            String twoHyphens = "--";
+            String boundary = "******";
+            try {
+                URL url = new URL(uploadUrl);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                httpURLConnection.setChunkedStreamingMode(51200);
+                httpURLConnection.setDoInput(true);
+                httpURLConnection.setDoOutput(true);
+                httpURLConnection.setUseCaches(false);
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setConnectTimeout(6*1000);
+                httpURLConnection.setRequestProperty("Connection", "Keep-Alive");
+                httpURLConnection.setRequestProperty("Charset", "UTF-8");
+                httpURLConnection.setRequestProperty("Content-Type",
+                        "multipart/form-data;boundary=" + boundary);
+                httpURLConnection.setRequestProperty("picname", picFileName );
+
+                DataOutputStream dos = new DataOutputStream(httpURLConnection
+                        .getOutputStream());
+                dos.writeBytes(twoHyphens + boundary + end);
+                dos.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\""
+                        + fileName  + "\"" + end);
+                dos.writeBytes(end);
+
+
+                byte[] buffer = new byte[8192]; // 8k
+                int count = 0;
+                int length = 0;
+                dos.write( picData.getBytes()  );
+
+                dos.writeBytes(end);
+                dos.writeBytes(twoHyphens + boundary + twoHyphens + end);
+                dos.flush();
+
+                InputStream is;
+                int code = httpURLConnection.getResponseCode();
+                if (code == 200) {
+                    is = httpURLConnection.getInputStream(); // 得到网络返回的正确输入流
+//                    System.out.println("得到正确的返回流");
+                } else {
+                    is = httpURLConnection.getErrorStream(); // 得到网络返回的错误输入流
+//                    System.out.println("得到正确的返回流");
+                }
+                InputStreamReader isr = new InputStreamReader(is, "utf-8");
+                BufferedReader br = new BufferedReader(isr);
+                String result = br.readLine();
+
+//                System.out.println("服务器的返回结果是  " + result );
+                dos.close();
+                br.close();
+
+                if (  result.contains( "success"  )  ) {
+//                    System.out.println("上传成功");
+                    return "上传成功";
+                }
+
+
+            }catch (Exception e) {
+                e.printStackTrace();
+                return "上传失败";
+            }
+            return "上传失败";
+        }
+
+
+
+        protected String doInBackground_bk(byte[] ... params) {
+            System.out.println("进入异步线程");
+            int compressPicQuality = picQuality;
+            byte data [] = params[0];
+            String uploadUrl = requestURL;
+            String fileName = picFileName;
+            String picMarker = picFileMarker;
+
+            Bitmap mBitmap = BitmapFactory.decodeByteArray(data, 0, data.length );
+            final Bitmap mTimeWatermark = AddTimeWatermark(mBitmap,  picMarker);    //时间水印
+
+
+
+            String picData = bitmapToBase64(mTimeWatermark, compressPicQuality);
+            String end = "\r\n";
+            String twoHyphens = "--";
+            String boundary = "******";
+            try {
+                URL url = new URL(uploadUrl);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                httpURLConnection.setChunkedStreamingMode(51200);
+                httpURLConnection.setDoInput(true);
+                httpURLConnection.setDoOutput(true);
+                httpURLConnection.setUseCaches(false);
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setConnectTimeout(6*1000);
+                httpURLConnection.setRequestProperty("Connection", "Keep-Alive");
+                httpURLConnection.setRequestProperty("Charset", "UTF-8");
+                httpURLConnection.setRequestProperty("Content-Type",
+                        "multipart/form-data;boundary=" + boundary);
+
+                DataOutputStream dos = new DataOutputStream(httpURLConnection
+                        .getOutputStream());
+                dos.writeBytes(twoHyphens + boundary + end);
+                dos.writeBytes("Content-Disposition: form-data; name=\"image\"; filename=\""
+                        + fileName  + "\"" + end);
+                dos.writeBytes(end);
+
+
+                byte[] buffer = new byte[8192]; // 8k
+                int count = 0;
+                int length = 0;
+                dos.write( picData.getBytes()  );
+
+                dos.writeBytes(end);
+                dos.writeBytes(twoHyphens + boundary + twoHyphens + end);
+                dos.flush();
+
+                InputStream is;
+                int code = httpURLConnection.getResponseCode();
+                if (code == 200) {
+                    is = httpURLConnection.getInputStream(); // 得到网络返回的正确输入流
+                    System.out.println("得到正确的返回流");
+                } else {
+                    is = httpURLConnection.getErrorStream(); // 得到网络返回的错误输入流
+                    System.out.println("得到正确的返回流");
+                }
+                InputStreamReader isr = new InputStreamReader(is, "utf-8");
+                BufferedReader br = new BufferedReader(isr);
+                String result = br.readLine();
+
+                dos.close();
+                br.close();
+                System.out.println("上传成功");
+                return "上传成功";
+
+            }catch (Exception e) {
+                e.printStackTrace();
+                return "上传失败";
+            }
+        }
+
+
+
+    }  // MyTask 结束
+
+
+    public void saveToLocal( String picFilePath, byte data[] ) {
+
+        File pictureFile = new File( picFilePath );
+        try {
+            if (pictureFile == null) {
+                Log.d(TAG, "Error creating media file, check storage permissions");
+                return;
+            }
+            File mFile = pictureFile ;
+            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length );
+            Bitmap mTimeWatermark = AddTimeWatermark(bitmap,  picFileMarker);    //时间水印
+
+
+            Matrix matrix = new Matrix();    //采样
+            matrix.setScale(0.5f, 0.5f);
+            Bitmap bm = Bitmap.createBitmap(mTimeWatermark, 0, 0, mTimeWatermark.getWidth(), mTimeWatermark.getHeight(), matrix, true);
+            mTimeWatermark = bm;
+
+
+            BufferedOutputStream mOutputStream = new BufferedOutputStream(new FileOutputStream(mFile));
+            // 将图片压缩到流中
+            mTimeWatermark.compress(Bitmap.CompressFormat.JPEG, options.picQuality,  mOutputStream);      //时间水印
+            mOutputStream.flush();
+            mOutputStream.close();
+//            System.out.println("图片的质量是：" +  options.picQuality );
+            Uri uri = Uri.fromFile(pictureFile);
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
+
+        } catch (FileNotFoundException e) {
+            Log.d(TAG, "File not found: " + e.getMessage());
+        } catch (IOException e) {
+            Log.d(TAG, "Error accessing file: " + e.getMessage());
+        }
+    }
+
+
+
+    public void takePicture(final ImageView view,  Camera camera, final String picName){
+        picFileMarker = picName;
+        picFileName  =  picName + ".jpg";
+
         camera.takePicture(null,null,new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
 //                System.out.println("*********写回位置图片*********"     );
-                String path = Environment.getExternalStorageDirectory().getPath() + "/DCIM/kuaidi/";
+                final String path = Environment.getExternalStorageDirectory().getPath() + "/DCIM/kuaidi/";
                 File pic_dir = new File( path );
-                File pictureFile =  new File( path + File.separator + "快递_" + result  + ".jpg"  ) ;
-//                System.out.println("*********写回位置图片"  + path  );
+                final String picFilePath =  path + File.separator + "快递_" + picName  + ".jpg"  ;
+                final byte picData []  =   data;
 
-                if (!pic_dir.exists()) {
-                    try {
-                        //按照指定的路径创建文件夹
-                        pic_dir.mkdirs();
-
-                    } catch (Exception e) {
-                        // TODO: handle exception
-                    }
-                }
-
-                Bitmap mBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                //添加时间水印
-                Bitmap mTimeWatermark = AddTimeWatermark(mBitmap,  result);
-//                if(mBitmap != null && !mBitmap.isRecycled()){
-//                    mBitmap.recycle();
-//                    mBitmap = null;
-//                }
+                new_scan_time   = System.currentTimeMillis();
+                long scan_delta =( new_scan_time - pre_scan_time) /1000;
 
 
-                try {
-                    if (pictureFile == null) {
-                        Log.d(TAG, "Error creating media file, check storage permissions");
-                        return;
+                if( picSet.contains( picName ) &&  scan_delta < 6  ) { // 如果已经检测过了, 而且上一次检测这张快递在5秒钟之内
+
+
+                } else {  // 如果没检测过
+
+                    if (!pic_dir.exists() ) {
+                        try {
+                            //按照指定的路径创建文件夹
+                            pic_dir.mkdirs();
+
+                        } catch (Exception e) {
+                            // TODO: handle exception
+                        }
                     }
 
-                    File mFile = pictureFile ;
-                    BufferedOutputStream mOutputStream = new BufferedOutputStream(new FileOutputStream(mFile));
-                    // 将图片压缩到流中
-                    mTimeWatermark.compress(Bitmap.CompressFormat.JPEG,80,mOutputStream);      //时间水印
-                    mOutputStream.flush();
-                    mOutputStream.close();
-                    Uri uri = Uri.fromFile(pictureFile);
-                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
-//                    FileOutputStream fos = new FileOutputStream(pictureFile);
-//                    fos.write(data);
-//                    fos.close();
-//                    view.setImageURI(outputMediaFileUri);
-                    camera.startPreview();
-                } catch (FileNotFoundException e) {
-                    Log.d(TAG, "File not found: " + e.getMessage());
-                } catch (IOException e) {
-                    Log.d(TAG, "Error accessing file: " + e.getMessage());
+                    if( options.isUpload()  ){  //  如果上传到服务器
+                        MyTask mTask = new MyTask();
+                        mTask.execute( data );
+
+                    } else {   // 保存到本地
+
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                saveToLocal(picFilePath, picData );
+                            }
+                        }).start();
+                    }
+
+
                 }
+
+
+                pre_scan_time = new_scan_time;  // 记录检测时间
+                picSet.add( picName ); // 将已经检测到的 快递 加入到集合当中
+                camera.startPreview();
+
             }
         });
-    }
 
-    public void takePicture4(final ImageView view ,  Camera mCamera ){
-        System.out.println("*********进入拍照程序*************"   );
-        mCamera.takePicture(null,null,new Camera.PictureCallback() {
-            @Override
-            public void onPictureTaken(byte[] data, Camera camera) {
-//                File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-                System.out.println("*********写回图片位置*************"   );
-                String path = Environment.getExternalStorageDirectory().getPath() + "/DCIM/test/";
-                File pictureFile =  new File( path + File.separator + "a" +  System.currentTimeMillis() + "新的.jpg"  ) ;
-                System.out.println("*********写回图片位置"  + path  );
-
-                try {
-
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
-                    fos.write(data);
-                    fos.close();
-//                    view.setImageURI(outputMediaFileUri);
-                    camera.startPreview();
-                } catch (FileNotFoundException e) {
-                    Log.d(TAG, "File not found: " + e.getMessage());
-                } catch (IOException e) {
-                    Log.d(TAG, "Error accessing file: " + e.getMessage());
-                }
-//                camera.startPreview();
-            }
-        });
-    }
-
-    public void takePicture3(final ImageView view,  Camera camera){
-//        System.out.println("*********进来了没*************"   );
-        camera.takePicture(null,null,new Camera.PictureCallback() {
-            @Override
-            public void onPictureTaken(byte[] data, Camera camera) {
-//                System.out.println("*********写回图片位置*************"   );
-                String path = Environment.getExternalStorageDirectory().getPath() + "/DCIM/test/";
-                File pictureFile =  new File( path + File.separator + "a" +  System.currentTimeMillis() + "新的.jpg"  ) ;
-//                System.out.println("*********写回图片位置"  + path  );
-
-//                if (pictureFile == null) {
-//                    Log.d(TAG, "Error creating media file, check storage permissions");
-//                    return;
-//                }
-//
-                try {
-
-
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
-                    fos.write(data);
-                    fos.close();
-//                    view.setImageURI(outputMediaFileUri);
-                    camera.startPreview();
-                } catch (FileNotFoundException e) {
-                    Log.d(TAG, "File not found: " + e.getMessage());
-                } catch (IOException e) {
-                    Log.d(TAG, "Error accessing file: " + e.getMessage());
-                }
-            }
-        });
     }
 
 
@@ -421,16 +813,17 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
             Camera mCamera = cp.getCamera();
 
 //            System.out.println("是否为空" + mCamera == null );
-            if (mCamera != null)
-                System.out.println("写回第二章图片" + result.getContent() );
+//            if (mCamera != null)
+//                System.out.println("写回第二章图片"  );
 //                mCamera.takePicture(null, null, new MyPictureCallback());
 
-                final  String res_str = result.getContent();
-                takePicture(null, mCamera, res_str );
+            final  String res_str = result.getContent();
+
+            takePicture(null, mCamera, res_str );
 
 
             if (options.isPlay_sound()) {
-                soundPool.play(1, 1, 1, 0, 0, 1);
+                soundPool.play(finishSoundID, 1, 1, 0, 0, 1);
             }
             if (options.isShow_vibrator()) {
                 QRUtils.getInstance().getVibrator(getApplicationContext());
@@ -497,11 +890,13 @@ public class QRActivity extends Activity implements View.OnClickListener, Sensor
 
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
         if (cp != null) {
             cp.setFlash(false);
             cp.stop();
         }
+
         soundPool.release();
     }
 

@@ -166,6 +166,12 @@ public class Symbol {
 
 
     /**
+     *  是否上传图片
+     */
+    public static boolean  upload = true;
+
+
+    /**
      * 持续扫描间隔时间
      */
     public static int looperWaitTime = 0;

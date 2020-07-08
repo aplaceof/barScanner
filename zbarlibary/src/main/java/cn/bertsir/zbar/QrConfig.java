@@ -35,12 +35,20 @@ public class QrConfig implements Serializable {
     public boolean finger_zoom = false;
     public boolean only_center = false;
     public boolean play_sound = true;
+    public boolean upload = true;
     public boolean double_engine = false;
     public boolean loop_scan = false;
     public boolean show_vibrator = false;
     public String title_text = "扫描二维码";
     public String des_text = "(识别二维码)";
     public String open_album_text = "选择要识别的图片";
+
+
+    public String IPAdress = "191.168.0.100";   //  服务器相关设置
+    public String port = "10010";
+    public String serverPath = "firstWeb_war_exploded/demo";
+    public int picQuality = 60;
+
     public int line_speed = LINE_FAST;
     public int line_style = ScanLineView.style_hybrid;
     public int corner_width = 10;
@@ -69,8 +77,8 @@ public class QrConfig implements Serializable {
     public static final int SCREEN_LANDSCAPE = 2;//屏幕横向
     public static final int SCREEN_SENSOR = 3;//屏幕自动
 
-    public int scan_type = TYPE_QRCODE;//默认只扫描二维码
-    public int scan_view_type = SCANVIEW_TYPE_QRCODE;//默认为二维码扫描框
+    public int scan_type = TYPE_BARCODE;//默认只扫描条形码
+    public int scan_view_type = SCANVIEW_TYPE_BARCODE;//默认为条形码扫描框
 
     public final static int REQUEST_CAMERA = 99;
     public final static String EXTRA_THIS_CONFIG = "extra_this_config";
@@ -144,6 +152,8 @@ public class QrConfig implements Serializable {
         return play_sound;
     }
 
+    public boolean isUpload() { return upload;  }
+
     public int getCORNER_COLOR() {
         return CORNER_COLOR;
     }
@@ -187,6 +197,14 @@ public class QrConfig implements Serializable {
     public String getDes_text() {
         return des_text;
     }
+
+    public String getIPAdress() { return IPAdress; }
+
+    public String getPort() { return port; }
+
+    public int getPicQuality() { return picQuality; }
+
+    public String getServerPath() { return serverPath; }
 
     public String getOpen_album_text() {
         return open_album_text;
@@ -296,6 +314,23 @@ public class QrConfig implements Serializable {
             return this;
         }
 
+        public Builder setIPAdress(String adress ){
+            watcher.IPAdress = adress;
+            return this;
+        }
+        public Builder setPort(String portNum){
+            watcher.port = portNum;
+            return this;
+        }
+        public Builder setPicQuality(int quality ){
+            watcher.picQuality = quality;
+            return this;
+        }
+        public Builder setServerPath (String path){
+            watcher.serverPath = path;
+            return this;
+        }
+
         public Builder setTitleText(String text){
             watcher.title_text = text;
             return this;
@@ -341,6 +376,10 @@ public class QrConfig implements Serializable {
 
         public Builder setPlaySound(boolean play){
             watcher.play_sound = play;
+            return this;
+        }
+        public Builder setUpload( boolean uploadToServer ) {
+            watcher.upload = uploadToServer;
             return this;
         }
 

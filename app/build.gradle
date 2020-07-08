@@ -14,6 +14,7 @@ android {
                abiFilters 'armeabi','armeabi-v7a','armeabi-v8a',"x86"
         }
     }
+    useLibrary 'org.apache.http.legacy'
     buildTypes {
         release {
             minifyEnabled false

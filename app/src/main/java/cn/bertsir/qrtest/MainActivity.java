@@ -1,5 +1,7 @@
 package cn.bertsir.qrtest;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -12,7 +14,11 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
+import android.widget.SeekBar;
 import android.widget.Toast;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cn.bertsir.zbar.Qr.ScanResult;
 import cn.bertsir.zbar.QrConfig;
@@ -57,6 +63,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RadioButton rb_scanline_grid;
     private RadioButton rb_scanline_hybrid;
     private RadioButton rb_scanline_line;
+    //   上传服务器的组件
+    private CheckBox cb_upload;
+    protected SeekBar sk_quality;
+    public  int pic_quality;
+    private EditText et_IPAdress;
+    private EditText et_port;
+    private EditText et_serverPath;
+    QrConfig qrConfig = null;
+    private Button bt_saveConfig;
+    private Context mContext;
+
 
 
 
@@ -65,6 +82,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
+        loadSettings();
+
+    }
+    @Override
+    protected void onDestroy() {
+
+
+//        SPUtils.put(mContext, "IPAddress", et_IPAdress.getText().toString()   );
+//        SPUtils.put(mContext, "port",  et_port.getText().toString()    );
+//        SPUtils.put(mContext, "picQuality",  "" + sk_quality.getProgress()   );
+//        SPUtils.put(mContext, "serverPath",  et_serverPath.getText().toString()   );
+
+        super.onDestroy();
+    }
+
+    /**
+     * 保存设置到文件
+     */
+    private void saveSettings() {
+        SharedPreferences sharedPreferences = getSharedPreferences("MySettings.xml", MODE_PRIVATE);
+        //2.创建Editor 对象，写入值
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("IPAddress", et_IPAdress.getText().toString()  );
+        editor.putString("port", et_port.getText().toString()  );
+        editor.putString("picQuality", "" + sk_quality.getProgress()   );
+        editor.putString("serverPath", et_serverPath.getText().toString()  );
+
+        editor.commit();
+    }
+
+    public boolean isNumeric(String str){
+        Pattern pattern = Pattern.compile("[0-9]*");
+        Matcher isNum = pattern.matcher(str);
+        if( !isNum.matches() ){
+            return false;
+        }
+        return true;
+    }
+
+
+    private void loadSettings() {
+        SharedPreferences preferences = getSharedPreferences("MySettings.xml", MODE_PRIVATE);
+        //如果文件存不存在，进行节点赋值
+        if (preferences != null) {
+
+            et_IPAdress.setText( preferences.getString("IPAddress", "")   );
+            et_port.setText( preferences.getString("port", "")   );
+            String temp =  preferences.getString("picQuality", "");
+            if( temp.length() > 0 &&  isNumeric(temp ) ) { // 如果这是一个数字
+                int temNum = Integer.parseInt( temp   );
+                if( temNum >50 && temNum <=100 )
+                sk_quality.setProgress(  temNum  );
+            }
+
+            et_serverPath.setText( preferences.getString("serverPath", "")   );
+
+        }
+
+
+
+//        et_IPAdress.setText(SPUtils.get(mContext, "IPAddress", "").toString());
+//        et_port.setText(SPUtils.get(mContext, "port", "").toString());
+//        sk_quality.setProgress( Integer.parseInt(  SPUtils.get(mContext, "picQuality", "").toString()  ) );
+//        et_serverPath.setText(SPUtils.get(mContext, "serverPath", "").toString());
+
     }
 
     private void initView() {
@@ -129,7 +211,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         cb_auto_light = (CheckBox) findViewById(R.id.cb_auto_light);
         cb_have_vibrator = (CheckBox) findViewById(R.id.cb_have_vibrator);
 
+
+        //   连接服务器的组件
+        cb_upload = (CheckBox) findViewById(R.id.cb_upload);
+        et_IPAdress = (EditText) findViewById(R.id.et_IPAdress);
+        et_port = (EditText) findViewById(R.id.et_port);
+        et_serverPath = (EditText) findViewById(R.id.et_serverPath);
+        sk_quality = (SeekBar) findViewById(R.id.sk_quality);
+        bt_saveConfig = (Button) findViewById(R.id.bt_saveConfig);
+        bt_saveConfig.setOnClickListener(new ButtonClickListener());
+
+
+        // 设置拖动条改变监听器
+        SeekBar.OnSeekBarChangeListener osbcl = new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,
+                                          boolean fromUser) {
+//            tv1.setText("当前进度：" + sb.getProgress());
+                pic_quality  = seekBar.getProgress();
+                if( qrConfig != null ) {
+                    qrConfig.picQuality = pic_quality;
+                }
+
+
+//            Toast.makeText(getApplicationContext(), "onProgressChanged",
+//                    Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+//            Toast.makeText(getApplicationContext(), "onStartTrackingTouch",
+//                    Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+//            Toast.makeText(getApplicationContext(), "onStopTrackingTouch",
+//                    Toast.LENGTH_SHORT).show();
+            }
+
+        };
+
+        sk_quality.setOnSeekBarChangeListener(  osbcl  );
+
     }
+
+    private class ButtonClickListener implements View.OnClickListener{
+
+        public void onClick(View v) {
+            saveSettings();
+       }
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -152,6 +286,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+
+
+
+
+
     private void start() {
 
 //        System.out.println("***********运行程序"   );
@@ -169,6 +308,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             scan_type = QrConfig.TYPE_BARCODE;
             scan_view_type = QrConfig.SCANVIEW_TYPE_BARCODE;
         }
+
         if (rb_screen_auto.isChecked()) {
             screen = QrConfig.SCREEN_SENSOR;
         } else if (rb_screen_sx.isChecked()) {
@@ -188,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
-        QrConfig qrConfig = new QrConfig.Builder()
+         qrConfig = new QrConfig.Builder()
                 .setDesText(et_qr_des.getText().toString())//扫描框下文字
                 .setShowDes(cd_show_des.isChecked())//是否显示扫描框下面文字
                 .setShowLight(cb_show_flash.isChecked())//显示手电筒按钮
@@ -198,11 +338,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setCornerColor(Color.parseColor("#E42E30"))//设置扫描框颜色
                 .setLineColor(Color.parseColor("#E42E30"))//设置扫描线颜色
                 .setLineSpeed(QrConfig.LINE_MEDIUM)//设置扫描线速度
-                .setScanType(scan_type)//设置扫码类型（二维码，条形码，全部，自定义，默认为二维码）
-                .setScanViewType(scan_view_type)//设置扫描框类型（二维码还是条形码，默认为二维码）
+                .setScanType( scan_type )//设置扫码类型（二维码，条形码，全部，自定义，默认为二维码）
+                .setScanViewType(  scan_view_type    )//设置扫描框类型（二维码还是条形码，默认为二维码）
                 .setCustombarcodeformat(QrConfig.BARCODE_PDF417)//此项只有在扫码类型为TYPE_CUSTOM时才有效
                 .setPlaySound(cb_show_ding.isChecked())//是否扫描成功后bi~的声音
-                .setDingPath(cb_show_custom_ding.isChecked() ? R.raw.test : R.raw.qrcode)//设置提示音(不设置为默认的Ding~)
+                .setDingPath(cb_show_custom_ding.isChecked() ? R.raw.success : R.raw.qrcode)//设置提示音(不设置为默认的Ding~)
                 .setIsOnlyCenter(cb_only_center.isChecked())//是否只识别框中内容(默认为全屏识别)
                 .setTitleText(et_qr_title.getText().toString())//设置Tilte文字
                 .setTitleBackgroudColor(Color.parseColor("#262020"))//设置状态栏颜色
@@ -214,11 +354,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setScreenOrientation(screen)//设置屏幕方式
                 .setOpenAlbumText("选择要识别的图片")//打开相册的文字
                 .setLooperScan(cb_loop_scan.isChecked())//是否连续扫描二维码
-                .setLooperWaitTime(Integer.parseInt(et_loop_scan_time.getText().toString()) * 1000)//连续扫描间隔时间
-                .setScanLineStyle(line_style)//扫描线样式
+                .setLooperWaitTime(Integer.parseInt(  et_loop_scan_time.getText().toString()  ) * 1000)//连续扫描间隔时间
+                .setScanLineStyle(  line_style  )//扫描线样式
                 .setAutoLight(cb_auto_light.isChecked())//自动灯光
                 .setShowVibrator(cb_have_vibrator.isChecked())//是否震动提醒
+
+                .setUpload( cb_upload.isChecked()  )                             //  服务器及相关设置
+                .setIPAdress(  et_IPAdress.getText().toString()  )
+                .setPort(  et_port.getText().toString()  )
+                .setServerPath(  et_serverPath.getText().toString()  )
+                .setPicQuality( sk_quality.getProgress() )
                 .create();
+
+
+        System.out.println(  "初始化 ，  扫码类型是" +   scan_view_type   );
+
+
         QrManager.getInstance().init(qrConfig).startScan(MainActivity.this, new QrManager.OnScanResultCallback() {
             @Override
             public void onScanSuccess(ScanResult result) {
@@ -227,6 +378,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         + "  类型：" + result.getType(), Toast.LENGTH_SHORT).show();
             }
         });
+
+        saveSettings();  // 保存设置到文件
+
     }
 
 }

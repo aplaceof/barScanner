@@ -33,6 +33,7 @@
              android:layout_width="match_parent"
              android:layout_height="wrap_content"
              android:text="BertSir"
+             android:textSize= "15sp"
              />
 
          <EditText
@@ -40,20 +41,121 @@
              android:layout_width="match_parent"
              android:layout_height="wrap_content"
              android:text="扫描二维码"
+             android:textSize= "15sp"
              />
          <EditText
              android:id="@+id/et_qr_des"
              android:layout_width="match_parent"
              android:layout_height="wrap_content"
              android:text="(识别二维码)"
+             android:textSize= "15sp"
              />
+
+
+         <CheckBox
+             android:id="@+id/cb_upload"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:text="是否上传到服务器"
+             android:checked="true"
+             />
+
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="ip地址:" />
+            <EditText
+                android:id="@+id/et_IPAdress"
+                android:layout_width="match_parent"
+                android:textSize= "15sp"
+                android:layout_height="wrap_content"
+                android:text="192.168.0.100"
+                />
+
+         </LinearLayout>
+
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="端口号:" />
+            <EditText
+                android:id="@+id/et_port"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize= "15sp"
+                android:text="10010"
+                />
+
+         </LinearLayout>
+
+
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="服务器路径:" />
+            <EditText
+                android:id="@+id/et_serverPath"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize= "15sp"
+                android:text="firstWeb_war_exploded/demo"
+                />
+         </LinearLayout>
+
+
+
+         <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="图片质量:" />
+            <SeekBar
+                android:id="@+id/sk_quality"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:min="50"
+                android:max="100"
+                android:progress="80" />
+         </LinearLayout>
+         <Button
+             android:id="@+id/bt_saveConfig"
+             android:layout_width="100dp"
+             android:layout_height="match_parent"
+             android:gravity="center"
+             android:text="保存设置"
+            />
+
+
          <CheckBox
              android:id="@+id/cb_show_title"
              android:layout_width="wrap_content"
              android:layout_height="wrap_content"
-             android:text="是否显示Title"
+             android:text="是否显示标题:"
              android:checked="true"
              />
+
          <CheckBox
              android:id="@+id/cd_show_des"
              android:layout_width="wrap_content"
@@ -179,6 +281,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="number"
                 android:text="5"
+                android:textSize= "15sp"
                 android:gravity="center_horizontal"
                 />
 
