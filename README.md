@@ -65,6 +65,14 @@
 </p>
    
    3. 服务端拍照
+      </p>
+   <p align="center">
+  <img src="picture/快递_81711980130872461330.jpg" height="300"  />
+</p>
+   </p>
+   <p align="center">
+  <img src="picture/人像_81711980130872461330.jpg" height="300"  />
+</p>
    
 
 
