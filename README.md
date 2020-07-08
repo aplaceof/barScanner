@@ -18,7 +18,7 @@
 2. 在QRActivity类中定义了 :
    1. 拍照函数 takePicture
    2. 添加文字信息函数  AddTimeWatermark 
-3. 在QRActivity类 ScanCallback回调函数中调用takePicture函数， takePicture拍照后，调用AddTimeWatermark添加扫描结果以及扫描时间信息，保存到本地文件中。
+3. 在QRActivity类 ScanCallback回调函数中调用takePicture函数， takePicture拍照后，调用AddTimeWatermark添加扫描结果以及扫描时间信息，保存到本地文件中， 或者发送给服务器。 
 
 ## 效果：
 这个拍的是药盒， 拍快递单一样的。 人脸图像用的是小象的，没人想上镜啊， 就让吉祥物来吧。
