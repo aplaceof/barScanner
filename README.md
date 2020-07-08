@@ -54,13 +54,13 @@
 </p>
 
    #### 开启服务器（快递服务器和照相服务器 ）
-   \ \ \ \ **快递服务器**
+   &ensp;&ensp;&ensp;&ensp; **快递服务器**
    
 <p align="center">
   <img src="picture/file_server.jpg" height="100"  />
 </p>
 
-   \ \ \  **照相服务器**
+   &ensp;&ensp;&ensp;&ensp; **照相服务器**
 
 <p align="center">
   <img src="picture/camera_server.jpg" height="300"  />
@@ -82,13 +82,13 @@
    3. 服务端拍照
    
    
-   #### 快递相片
+   &ensp;&ensp;&ensp;&ensp; **快递相片** 
    
  <p align="center">
   <img src="picture/快递_81711980130872461330.jpg" height="300"  />
 </p>
 
-   #### 人脸相片 
+   &ensp;&ensp;&ensp;&ensp; **人脸相片** 
       
 <p align="center">
   <img src="picture/人像_81711980130872461330.jpg" height="300"  />
