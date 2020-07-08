@@ -47,15 +47,19 @@
 
 如图所示：
    1. 配置服务器信息, 并打开服务器。  服务器需要结合server config 目录下的三个配置文件使用， 将这三个文件放在config文件夹下，config文件夹 放在总路径下。同时将tomcat的版本号信息都删去，将kuaidi.war放在其webapp目录下。 如图所示。
-      #### 配置服务器
+   #### 配置服务器
    <p align="center">
   <img src="picture/server config.jpg" height="300"  />
 </p>
+
    #### 开启服务器（tomcat 服务器后台运行， 不会显示出来， 只有照相服务器有界面）
+   
    <p align="center">
   <img src="picture/server.jpg" height="300"  />
 </p>
+
    #### 服务器的路径设置
+   
 </p>
    <p align="center">
   <img src="picture/path.jpg" height="300"  />
