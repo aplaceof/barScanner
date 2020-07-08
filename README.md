@@ -53,10 +53,14 @@
   <img src="picture/server config.jpg" height="300"  />
 </p>
 
-   #### 开启服务器（tomcat 服务器后台运行， 不会显示出来， 只有照相服务器有界面）
+   #### 开启服务器（快递服务器和照相服务器 ）
    
 <p align="center">
-  <img src="picture/server.jpg" height="300"  />
+  <img src="picture/file_server.jpg" height="300"  />
+</p>
+
+<p align="center">
+  <img src="picture/camera_server.jpg" height="300"  />
 </p>
 
    #### 服务器的路径设置
