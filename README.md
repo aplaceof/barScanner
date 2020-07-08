@@ -38,7 +38,11 @@
    2.	根据服务器信息设置安卓app，
    3.	手机将拍下来的照片发送给 tomcat 服务器（kuaidi.war），  tomcat 服务器将拍下来的照片进行存储。 
    4. 同时tomcat 服务器向 服务器本机 的拍照服务器(camera.jar)发送请求， 拍照服务器连接摄像机， 拍下人脸照片。
+   
+   
 注： 手机只需连接tomcat 服务器即可 。
+
+
 如图所示：
    1. 配置服务器信息, 并打开服务器。  服务器需要结合server config 目录下的三个配置文件使用， 将这三个文件放在config文件夹下，config文件夹 放在总路径下。同时将tomcat的版本号信息都删去，将kuaidi.war放在其webapp目录下。 如图所示。
    ## ![image-20200608080449651](picture/server_config.jpg)
